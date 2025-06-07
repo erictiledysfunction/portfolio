@@ -2,8 +2,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Navigation active state
   const sections = document.querySelectorAll(".section")
   const navLinks = document.querySelectorAll("nav ul li a")
+  const pageContainer = document.querySelector(".page-container")
 
-  // Smooth scrolling for navigation links
+  // Initialize sections visibility
+  const initializeSections = () => {
+    sections.forEach((section, index) => {
+      if (index === 0) {
+        section.classList.add("visible")
+      }
+    })
+  }
+
+  // Smooth scrolling for navigation links with transition effect
   navLinks.forEach((link) => {
     link.addEventListener("click", function (e) {
       e.preventDefault()
@@ -11,30 +21,48 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetId = this.getAttribute("href")
       const targetSection = document.querySelector(targetId)
 
-      window.scrollTo({
-        top: targetSection.offsetTop - 70,
-        behavior: "smooth",
-      })
+      // Add transition effect
+      pageContainer.classList.add("transitioning")
 
-      // Update active link
-      navLinks.forEach((link) => link.classList.remove("active"))
-      this.classList.add("active")
+      setTimeout(() => {
+        window.scrollTo({
+          top: targetSection.offsetTop - 70,
+          behavior: "smooth",
+        })
+
+        // Update active link immediately
+        navLinks.forEach((link) => link.classList.remove("active"))
+        this.classList.add("active")
+
+        // Remove transition effect
+        setTimeout(() => {
+          pageContainer.classList.remove("transitioning")
+        }, 300)
+      }, 150)
     })
   })
 
-  // Update active link on scroll
+  // Update active link on scroll and handle section visibility
   window.addEventListener("scroll", () => {
     let current = ""
 
     sections.forEach((section) => {
-      const sectionTop = section.offsetTop - 100
+      const sectionTop = section.offsetTop - 200
       const sectionHeight = section.clientHeight
+      const sectionBottom = sectionTop + sectionHeight
 
+      // Check if section is in viewport for visibility
+      if (pageYOffset >= sectionTop - 300 && pageYOffset < sectionBottom) {
+        section.classList.add("visible")
+      }
+
+      // Check for active navigation
       if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
         current = section.getAttribute("id")
       }
     })
 
+    // Update active navigation link
     navLinks.forEach((link) => {
       link.classList.remove("active")
       if (link.getAttribute("href") === `#${current}`) {
@@ -43,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     // Animate skill bars when in view
-    if (current === "skills") {
+    if (current === "about") {
       animateSkillBars()
     }
 
@@ -58,14 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Animate skill bars
   function animateSkillBars() {
-    const skillLevels = document.querySelectorAll(".skill-level")
-    skillLevels.forEach((level) => {
-      const width = level.style.width
-      level.style.width = "0"
-      setTimeout(() => {
-        level.style.width = width
-      }, 200)
-    })
+    // Animation removed - skill bars now display at full width immediately
   }
 
   // Download CV functionality
@@ -109,8 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("load", revealOnScroll)
   window.addEventListener("scroll", revealOnScroll)
 
-  // Initial call to set active link on page load
+  // Initial setup
   setTimeout(() => {
+    initializeSections()
+
     const scrollPosition = window.scrollY
     let current = ""
 
@@ -135,4 +158,78 @@ document.addEventListener("DOMContentLoaded", () => {
       navLinks[0].classList.add("active")
     }
   }, 100)
+
+  // Education items hover effects
+  const educationItems = document.querySelectorAll(".education-item")
+
+  educationItems.forEach((item) => {
+    item.addEventListener("mouseenter", () => {
+      const logo = item.querySelector(".school-logo")
+      if (logo && window.innerWidth > 768) {
+        logo.style.opacity = "1"
+        logo.style.left = "-120px"
+      }
+    })
+
+    item.addEventListener("mouseleave", () => {
+      const logo = item.querySelector(".school-logo")
+      if (logo && window.innerWidth > 768) {
+        logo.style.opacity = "0"
+        logo.style.left = "-100px"
+      }
+    })
+  })
+
+  // Touch support for mobile devices
+  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0
+
+  if (isTouchDevice) {
+    // For touch devices, add tap functionality to education items
+    educationItems.forEach((item) => {
+      let isToggled = false
+
+      item.addEventListener("touchstart", (e) => {
+        e.preventDefault()
+        const logo = item.querySelector(".school-logo")
+
+        if (logo && window.innerWidth > 768) {
+          if (!isToggled) {
+            logo.style.opacity = "1"
+            logo.style.left = "-120px"
+            isToggled = true
+          } else {
+            logo.style.opacity = "0"
+            logo.style.left = "-100px"
+            isToggled = false
+          }
+        }
+      })
+    })
+
+    // Touch support for contact message card
+    const contactCard = document.getElementById("contact-message-card")
+    if (contactCard && window.innerWidth > 768) {
+      let cardToggled = false
+
+      contactCard.addEventListener("touchstart", (e) => {
+        e.preventDefault()
+        const messageText = document.getElementById("message-text")
+        const socialLinks = document.getElementById("contact-social-links")
+
+        if (!cardToggled) {
+          messageText.style.opacity = "0"
+          messageText.style.transform = "scale(0.8)"
+          socialLinks.style.opacity = "1"
+          socialLinks.style.transform = "translate(-50%, -50%) scale(1)"
+          cardToggled = true
+        } else {
+          messageText.style.opacity = "1"
+          messageText.style.transform = "scale(1)"
+          socialLinks.style.opacity = "0"
+          socialLinks.style.transform = "translate(-50%, -50%) scale(0.8)"
+          cardToggled = false
+        }
+      })
+    }
+  }
 })
